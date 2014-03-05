@@ -13,6 +13,7 @@ namespace Cirrious.MvvmCross.Plugins.PictureChooser
 {
     public interface IMvxPictureChooserTask
     {
+        // maybe ShowCamera as parameter? Does iOS/Droid supports this?
         void ChoosePictureFromLibrary(int maxPixelDimension, int percentQuality, Action<Stream> pictureAvailable,
                                       Action assumeCancelled);
         /// <summary>
