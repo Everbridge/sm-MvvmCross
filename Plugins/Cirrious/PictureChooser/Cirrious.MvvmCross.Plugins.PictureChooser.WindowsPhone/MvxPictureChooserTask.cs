@@ -23,7 +23,7 @@ namespace Cirrious.MvvmCross.Plugins.PictureChooser.WindowsPhone
         {
             // note - do not set PixelHeight = maxPixelDimension, PixelWidth = maxPixelDimension here - as that would create square cropping
             // maybe ShowCamera as parameter? Does iOS/Droid supports this?
-            var chooser = new PhotoChooserTask {ShowCamera = true};
+            var chooser = new PhotoChooserTask { ShowCamera = true };
             ChoosePictureCommon(chooser, maxPixelDimension, percentQuality, pictureAvailable, assumeCancelled);
         }
 
@@ -36,24 +36,30 @@ namespace Cirrious.MvvmCross.Plugins.PictureChooser.WindowsPhone
             // note - do not set PixelHeight = maxPixelDimension, PixelWidth = maxPixelDimension here - as that would create square cropping
             var chooser = new PhotoChooserTask
             {
-                ShowCamera = true, 
+                ShowCamera = true,
                 PixelWidth = maxPixelDimension
             };
             ChoosePictureCommon(chooser, maxPixelDimension, percentQuality, pictureAvailable, assumeCancelled);
         }
 
         /// <summary>
-        /// Will set PixelHeight and PixelWidth to maxPixelDimension, creating a "crop"  interface on device
+        /// Will set PixelHeight and PixelWidth to maxPixelDimension, creating a "crop"  interface on device.
+        /// If caller sets maxPixelDimension to -1, it means he does NOT want cropping or rescaling
         /// </summary>
         public void ChoosePictureFromLibraryWithCrop(int maxPixelDimension, int percentQuality, Action<Stream> pictureAvailable, Action assumeCancelled)
         {
             // note - do not set PixelHeight = maxPixelDimension, PixelWidth = maxPixelDimension here - as that would create square cropping
             var chooser = new PhotoChooserTask
             {
-                ShowCamera = true, 
-                PixelWidth = maxPixelDimension, 
-                PixelHeight = maxPixelDimension 
+                ShowCamera = true
             };
+
+            // if caller sets maxPixelDimension to -1, it means he DOES not want cropping or rescaling
+            if (maxPixelDimension != -1)
+            {
+                chooser.PixelWidth = maxPixelDimension;
+                chooser.PixelHeight = maxPixelDimension;
+            }
 
             ChoosePictureCommon(chooser, maxPixelDimension, percentQuality, pictureAvailable, assumeCancelled);
         }
@@ -61,7 +67,7 @@ namespace Cirrious.MvvmCross.Plugins.PictureChooser.WindowsPhone
         public void TakePicture(int maxPixelDimension, int percentQuality, Action<Stream> pictureAvailable,
                                 Action assumeCancelled)
         {
-            var chooser = new CameraCaptureTask {};
+            var chooser = new CameraCaptureTask { };
             ChoosePictureCommon(chooser, maxPixelDimension, percentQuality, pictureAvailable, assumeCancelled);
         }
 
@@ -107,7 +113,13 @@ namespace Cirrious.MvvmCross.Plugins.PictureChooser.WindowsPhone
         private void ResizeThenCallOnMainThread(int maxPixelDimension, int percentQuality, Stream input,
                                                 Action<Stream> success)
         {
-            ResizeJpegStream(maxPixelDimension, percentQuality, input, (stream) => CallAsync(stream, success));
+            // if caller sets maxPixelDimension to -1, it means he DOES not want cropping or rescaling
+            if (maxPixelDimension == -1)
+            {
+                success(input);
+            }
+            else
+                ResizeJpegStream(maxPixelDimension, percentQuality, input, (stream) => CallAsync(stream, success));
         }
 
         private void ResizeJpegStream(int maxPixelDimension, int percentQuality, Stream input, Action<Stream> success)
