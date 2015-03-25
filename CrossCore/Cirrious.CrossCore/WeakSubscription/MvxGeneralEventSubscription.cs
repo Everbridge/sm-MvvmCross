@@ -26,7 +26,6 @@ namespace Cirrious.CrossCore.WeakSubscription
         }
     }
 
-    /*
     public class MvxGeneralEventSubscription<TSource, TEventArgs>
         : MvxWeakEventSubscription<TSource, TEventArgs>
         where TSource : class
@@ -51,5 +50,4 @@ namespace Cirrious.CrossCore.WeakSubscription
             return new EventHandler<TEventArgs>(OnSourceEvent);
         }
     }
-     */
 }
