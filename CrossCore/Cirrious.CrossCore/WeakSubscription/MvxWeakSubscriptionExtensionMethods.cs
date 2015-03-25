@@ -55,6 +55,16 @@ namespace Cirrious.CrossCore.WeakSubscription
             return new MvxGeneralEventSubscription(source, eventInfo, eventHandler);
         }
 
+        public static MvxGeneralEventSubscription<TSource, TEventArgs> WeakSubscribe<TSource, TEventArgs>(
+            this EventInfo eventInfo,
+            TSource source,
+            EventHandler<TEventArgs> eventHandler)
+            where TSource : class
+            where TEventArgs : EventArgs
+        {
+            return new MvxGeneralEventSubscription<TSource, TEventArgs>(source, eventInfo, eventHandler);
+        }
+
         public static MvxValueEventSubscription<T> WeakSubscribe<T>(this EventInfo eventInfo,
                                                                     object source,
                                                                     EventHandler<MvxValueEventArgs<T>> eventHandler)
