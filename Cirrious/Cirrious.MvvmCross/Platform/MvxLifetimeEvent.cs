@@ -13,9 +13,6 @@ namespace Cirrious.MvvmCross.Platform
         ActivatedFromMemory,
         ActivatedFromDisk,
         Deactivated,
-        Closing,
-
-		// this is for droid only
-		Reusing
+        Closing
     }
 }

@@ -28,14 +28,10 @@ namespace Cirrious.MvvmCross.Droid.Views
         public virtual void OnCreate(Activity activity)
         {
             _createdActivityCount++;
-			if (_createdActivityCount == 1)
-			{
-				FireLifetimeChange(MvxLifetimeEvent.ActivatedFromDisk);
-			}
-			else
-			{
-				FireLifetimeChange(MvxLifetimeEvent.Reusing);
-			}
+            if (_createdActivityCount == 1)
+            {
+                FireLifetimeChange(MvxLifetimeEvent.ActivatedFromDisk);
+            }
             Activity = activity;
         }
 
