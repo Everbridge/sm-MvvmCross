@@ -91,8 +91,6 @@ namespace Cirrious.MvvmCross.Binding.Touch
                                                           view => new MvxUIViewTapTargetBinding(view, 2, 1));
             registry.RegisterCustomBindingFactory<UIView>("TwoFingerTap",
                                                           view => new MvxUIViewTapTargetBinding(view, 1, 2));
-			registry.RegisterCustomBindingFactory<UITextField>("TextFocus", (UITextField textField) => new MvxUITextFieldTextFocusTargetBinding(textField));
-														  
             /*
             registry.RegisterCustomBindingFactory<UIView>("TwoFingerDoubleTap",
                                                           view => new MvxUIViewTapTargetBinding(view, 2, 2));

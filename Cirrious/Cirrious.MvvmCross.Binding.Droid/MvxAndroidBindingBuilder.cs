@@ -130,7 +130,6 @@ namespace Cirrious.MvvmCross.Binding.Droid
                                                             new MvxViewLongClickBinding(view));
             registry.RegisterCustomBindingFactory<MvxRadioGroup>("SelectedItem",
                 radioGroup => new MvxRadioGroupSelectedItemBinding(radioGroup));
-			registry.RegisterCustomBindingFactory("TextFocus", (EditText view) => new MvxTextFocusTargetBinding(view));
         }
 
         protected override void FillDefaultBindingNames(IMvxBindingNameRegistry registry)
