@@ -8,7 +8,6 @@
 using System;
 using System.Collections;
 using System.Collections.Specialized;
-using Android;
 using Android.Content;
 using Android.Runtime;
 using Android.Views;
@@ -60,8 +59,8 @@ namespace Cirrious.MvvmCross.Binding.Droid.Views
                 throw new MvxException(
                     "bindingContext is null during MvxAdapter creation - Adapter's should only be created when a specific binding context has been placed on the stack");
             }
-            SimpleViewLayoutId = Resource.Layout.SimpleListItem1;
-            SimpleDropDownViewLayoutId = Resource.Layout.SimpleSpinnerDropDownItem;
+            SimpleViewLayoutId = Android.Resource.Layout.SimpleListItem1;
+            SimpleDropDownViewLayoutId = Android.Resource.Layout.SimpleSpinnerDropDownItem;
         }
 
 		protected MvxAdapter(IntPtr javaReference, JniHandleOwnership transfer)
@@ -143,7 +142,7 @@ namespace Cirrious.MvvmCross.Binding.Droid.Views
             
             if (_itemsSource != null && !(_itemsSource is IList))
                 MvxBindingTrace.Trace(MvxTraceLevel.Warning,
-                                      "Binding to IEnumerable rather than IList - this can be inefficient, especially for large lists");
+                                      "You are currently binding to IEnumerable - this can be inefficient, especially for large collections. Binding to IList is more efficient.");
             
             var newObservable = _itemsSource as INotifyCollectionChanged;
             if (newObservable != null)
@@ -309,7 +308,7 @@ namespace Cirrious.MvvmCross.Binding.Droid.Views
 
         protected virtual IMvxListItemView CreateBindableView(object dataContext, int templateId)
         {
-            return new MvxListItemView(_context, _bindingContext.LayoutInflater, dataContext, templateId);
+            return new MvxListItemView(_context, _bindingContext.LayoutInflaterHolder, dataContext, templateId);
         }
     }
 }

@@ -18,27 +18,82 @@ using Cirrious.MvvmCross.Binding.Droid.ResourceHelpers;
 
 namespace Cirrious.MvvmCross.Binding.Droid.Views
 {
+    [Register("cirrious.mvvmcross.binding.droid.views.MvxImageView")]
     public class MvxImageView
         : ImageView
     {
-        private readonly IMvxImageHelper<Bitmap> _imageHelper;
+        private IMvxImageHelper<Bitmap> _imageHelper;
+
+        public string ImageUrl
+        {
+            get
+            {
+                if (ImageHelper == null)
+                    return null;
+                return ImageHelper.ImageUrl;
+            }
+            set
+            {
+                if (ImageHelper == null)
+                    return;
+                ImageHelper.ImageUrl = value;
+            }
+        }
+
+        public string DefaultImagePath
+        {
+            get { return ImageHelper.DefaultImagePath; }
+            set { ImageHelper.DefaultImagePath = value; }
+        }
+
+        public string ErrorImagePath
+        {
+            get { return ImageHelper.ErrorImagePath; }
+            set { ImageHelper.ErrorImagePath = value; }
+        }
+
+        public override void SetMaxHeight(int maxHeight)
+        {
+            if (ImageHelper != null)
+                ImageHelper.MaxHeight = maxHeight;
+
+            base.SetMaxHeight(maxHeight);
+        }
+
+        public override void SetMaxWidth(int maxWidth)
+        {
+            if (ImageHelper != null)
+                ImageHelper.MaxWidth = maxWidth;
+
+            base.SetMaxWidth(maxWidth);
+        }
+
+        protected IMvxImageHelper<Bitmap> ImageHelper
+        {
+            get
+            {
+                if (_imageHelper == null)
+                {
+                    if (!Mvx.TryResolve(out _imageHelper))
+                    {
+                        MvxTrace.Error(
+                            "No IMvxImageHelper registered - you must provide an image helper before you can use a MvxImageView");
+                    }
+                    else
+                    {
+                        _imageHelper.ImageChanged += ImageHelperOnImageChanged;
+                    }
+                }
+                return _imageHelper;
+            }
+        }
 
         public MvxImageView(Context context, IAttributeSet attrs)
             : base(context, attrs)
         {
-            if (!Mvx.TryResolve(out _imageHelper))
-            {
-                MvxTrace.Error(
-                    "No IMvxImageHelper registered - you must provide an image helper before you can use a MvxImageView");
-            }
-            else
-            {
-                _imageHelper.ImageChanged += ImageHelperOnImageChanged;
-            }
-
             var typedArray = context.ObtainStyledAttributes(attrs,
                                                             MvxAndroidBindingResource.Instance
-                                                                                     .ImageViewStylableGroupId);
+                                                                .ImageViewStylableGroupId);
 
             int numStyles = typedArray.IndexCount;
             for (var i = 0; i < numStyles; ++i)
@@ -53,58 +108,11 @@ namespace Cirrious.MvvmCross.Binding.Droid.Views
         }
 
         public MvxImageView(Context context)
-            : base(context)
-        {
-            if (!Mvx.TryResolve(out _imageHelper))
-            {
-                MvxTrace.Error(
-                    "No IMvxImageHelper registered - you must provide an image helper before you can use a MvxImageView");
-            }
-            else
-            {
-                _imageHelper.ImageChanged += ImageHelperOnImageChanged;
-            }
-        }
+            : base(context) { }
 
-		protected MvxImageView(IntPtr javaReference, JniHandleOwnership transfer)
-			: base(javaReference, transfer)
-	    {
-	    }
+        protected MvxImageView(IntPtr javaReference, JniHandleOwnership transfer)
+            : base(javaReference, transfer) { }
 
-        public string ImageUrl
-        {
-            get
-            {
-                if (_imageHelper == null)
-                    return null;
-                return _imageHelper.ImageUrl;
-            }
-            set
-            {
-                if (_imageHelper == null)
-                    return;
-                _imageHelper.ImageUrl = value;
-            }
-        }
-
-        public string DefaultImagePath
-        {
-            get { return _imageHelper.DefaultImagePath; }
-            set { _imageHelper.DefaultImagePath = value; }
-        }
-
-        public string ErrorImagePath
-        {
-            get { return _imageHelper.ErrorImagePath; }
-            set { _imageHelper.ErrorImagePath = value; }
-        }
-
-        [Obsolete("Use ImageUrl instead")]
-        public string HttpImageUrl
-        {
-            get { return ImageUrl; }
-            set { ImageUrl = value; }
-        }
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -118,7 +126,9 @@ namespace Cirrious.MvvmCross.Binding.Droid.Views
 
         private void ImageHelperOnImageChanged(object sender, MvxValueEventArgs<Bitmap> mvxValueEventArgs)
         {
-            SetImageBitmap(mvxValueEventArgs.Value);
+            Post(() => { // marshal back on UI Thread
+                SetImageBitmap(mvxValueEventArgs.Value);
+            });
         }
     }
 }

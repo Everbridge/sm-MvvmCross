@@ -13,7 +13,12 @@
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <AndroidSupportedAbis>armeabi</AndroidSupportedAbis>
     <MandroidI18n />
-    <TargetFrameworkVersion>v3.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0.3</TargetFrameworkVersion>
+    <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+    <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
+    <AndroidResgenFile>Resources\Resource.Designer.cs</AndroidResgenFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
@@ -40,6 +45,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Mono.Android" />
+    <Reference Include="Mono.Android.Export" />
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -49,12 +55,15 @@
     <Compile Include="Binders\IMvxAndroidViewBinder.cs" />
     <Compile Include="Binders\IMvxAndroidViewBinderFactory.cs" />
     <Compile Include="Binders\IMvxAndroidViewFactory.cs" />
-    <Compile Include="Binders\IMvxLayoutInfactorFactory.cs" />
-    <Compile Include="Binders\IMvxLayoutInfactorFactoryFactory.cs" />
+    <Compile Include="Binders\IMvxLayoutInflaterFactory.cs" />
+    <Compile Include="Binders\IMvxLayoutInflaterFactoryFactory.cs" />
+    <Compile Include="Binders\IMvxLayoutInflaterHolderFactory.cs" />
+    <Compile Include="Binders\IMvxLayoutInflaterHolderFactoryFactory.cs" />
     <Compile Include="Binders\MvxAndroidViewBinder.cs" />
     <Compile Include="Binders\MvxAndroidViewBinderFactory.cs" />
     <Compile Include="Binders\MvxAndroidViewFactory.cs" />
-    <Compile Include="Binders\MvxLayoutInflatorFactoryFactory.cs" />
+    <Compile Include="Binders\MvxLayoutInflaterCompat.cs" />
+    <Compile Include="Binders\MvxLayoutInflaterFactoryFactory.cs" />
     <Compile Include="Binders\ViewTypeResolvers\IMvxAxmlNameViewTypeResolver.cs" />
     <Compile Include="Binders\ViewTypeResolvers\IMvxNamespaceListViewTypeResolver.cs" />
     <Compile Include="Binders\ViewTypeResolvers\MvxCachedViewTypeResolver.cs" />
@@ -74,6 +83,7 @@
     <Compile Include="ResourceHelpers\IMvxAppResourceTypeFinder.cs" />
     <Compile Include="ResourceHelpers\MvxAndroidBindingResource.cs" />
     <Compile Include="ResourceHelpers\MvxAppResourceTypeFinder.cs" />
+    <Compile Include="Resources\Resource.Designer.cs" />
     <Compile Include="Target\MvxExpandableListViewSelectedItemTargetBinding.cs" />
     <Compile Include="Target\MvxRatingBarRatingTargetBinding.cs" />
     <Compile Include="Target\MvxBaseStreamImageViewTargetBinding.cs" />
@@ -87,6 +97,7 @@
     <Compile Include="Target\MvxAutoCompleteTextViewPartialTextTargetBinding.cs" />
     <Compile Include="Target\MvxAutoCompleteTextViewSelectedObjectTargetBinding.cs" />
     <Compile Include="Target\MvxRadioGroupSelectedItemBinding.cs" />
+    <Compile Include="Target\MvxTextViewTextFormattedTargetBinding.cs" />
     <Compile Include="Target\MvxTextViewTextTargetBinding.cs" />
     <Compile Include="Target\MvxSeekBarProgressTargetBinding.cs" />
     <Compile Include="Target\MvxSpinnerSelectedItemBinding.cs" />
@@ -95,16 +106,18 @@
     <Compile Include="Target\MvxViewVisibleBinding.cs" />
     <Compile Include="Views\IMvxAdapter.cs" />
     <Compile Include="Views\IMvxAdapterWithChangedEvent.cs" />
-    <Compile Include="Views\IMvxLayoutInflater.cs" />
+    <Compile Include="Views\IMvxLayoutInflaterHolder.cs" />
     <Compile Include="Target\MvxViewLongClickBinding.cs" />
     <Compile Include="Views\MvxBaseListItemView.cs" />
     <Compile Include="BindingContext\MvxAndroidBindingContext.cs" />
+    <Compile Include="Views\MvxContextWrapper.cs" />
     <Compile Include="Views\MvxExpandableListAdapter.cs" />
     <Compile Include="Views\MvxExpandableListView.cs" />
     <Compile Include="Views\MvxFrameControl.cs" />
     <Compile Include="Views\MvxDatePicker.cs" />
     <Compile Include="Views\MvxGridView.cs" />
     <Compile Include="Views\MvxAutoCompleteTextView.cs" />
+    <Compile Include="Views\MvxLayoutInflater.cs" />
     <Compile Include="Views\MvxRadioGroup.cs" />
     <Compile Include="Views\MvxSpinner.cs" />
     <Compile Include="Views\MvxFilteringAdapter.cs" />
@@ -118,7 +131,7 @@
     <Compile Include="Target\MvxAndroidTargetBinding.cs" />
     <Compile Include="Target\MvxCompoundButtonCheckedTargetBinding.cs" />
     <Compile Include="Target\MvxImageViewDrawableTargetBinding.cs" />
-    <Compile Include="Binders\MvxBindingLayoutInflatorFactory.cs" />
+    <Compile Include="Binders\MvxBindingLayoutInflaterFactory.cs" />
     <Compile Include="MvxAndroidBindingBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Views\MvxImageView.cs" />
@@ -146,17 +159,15 @@
       <Project>{D89351C1-D48F-4AD0-A0B9-353A93425AB7}</Project>
       <Name>Cirrious.MvvmCross.Localization</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\PortableSupport\System.Windows\System.Windows.Droid.csproj">
-      <Project>{72D13EE1-53A3-4A9F-9281-AE44CC5E92AC}</Project>
-      <Name>System.Windows.Droid</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <CodeAnalysisDictionary Include="ResourcesToCopy\MvxBindingAttributes.xml">
+    <AndroidResource Include="Resources\values\MvxBindingAttributes.xml">
       <SubType>Designer</SubType>
-    </CodeAnalysisDictionary>
+    </AndroidResource>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <AndroidResource Include="Resources\values\Ids.xml" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

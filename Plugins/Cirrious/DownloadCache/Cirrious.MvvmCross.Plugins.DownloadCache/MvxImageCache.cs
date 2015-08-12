@@ -8,7 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 using Cirrious.CrossCore.Core;
 using Cirrious.CrossCore;
 
@@ -18,9 +18,6 @@ namespace Cirrious.MvvmCross.Plugins.DownloadCache
         : MvxAllThreadDispatchingObject
         , IMvxImageCache<T>
     {
-        private readonly Dictionary<string, List<CallbackPair>> _currentlyRequested =
-            new Dictionary<string, List<CallbackPair>>();
-
         private readonly Dictionary<string, Entry> _entriesByHttpUrl = new Dictionary<string, Entry>();
 
         private readonly IMvxFileDownloadCache _fileDownloadCache;
@@ -38,128 +35,75 @@ namespace Cirrious.MvvmCross.Plugins.DownloadCache
 
         #region IMvxImageCache<T> Members
 
-        public void RequestImage(string url, Action<T> success, Action<Exception> error)
+        public Task<T> RequestImage(string url)
         {
-            RunSyncOrAsyncWithLock(() =>
+            var tcs = new TaskCompletionSource<T>();
+
+            Task.Run(() => {
+                Entry entry;
+                if (_entriesByHttpUrl.TryGetValue(url, out entry))
                 {
-                    Entry entry;
-                    if (_entriesByHttpUrl.TryGetValue(url, out entry))
-                    {
-                        entry.WhenLastAccessedUtc = DateTime.UtcNow;
-                        DoCallback(entry, success);
-                        return;
-                    }
+                    entry.WhenLastAccessedUtc = DateTime.UtcNow;
+                    tcs.TrySetResult(entry.Image.RawImage);
+                    return;
+                }
 
-                    List<CallbackPair> currentlyRequested;
-                    if (_currentlyRequested.TryGetValue(url, out currentlyRequested))
-                    {
-                        currentlyRequested.Add(new CallbackPair(success, error));
-                        return;
-                    }
+                try
+                {
+                    _fileDownloadCache.RequestLocalFilePath(url, 
+                        async s => {
+                            var image = await Parse(s).ConfigureAwait(false);
+							if(!_entriesByHttpUrl.ContainsKey(url)) {
+                            	_entriesByHttpUrl.Add(url, new Entry(url, image));
+							}
 
-                    currentlyRequested = new List<CallbackPair> { new CallbackPair(success, error) };
-                    _currentlyRequested[url] = currentlyRequested;
+                            tcs.TrySetResult(image.RawImage);
+                        },
+                        exception => {
+                            tcs.TrySetException(exception);
+                        });
+                }
+                finally
+                {
+                    ReduceSizeIfNecessary();
+                }
+            });
 
-                    _fileDownloadCache.RequestLocalFilePath(url, (stream) => ProcessFilePath(url, stream),
-                                                            (exception) => ProcessError(url, exception));                    
-                });
+            return tcs.Task;
         }
 
         #endregion
 
-        private void DoCallback(Entry entry, Action<T> success)
-        {
-            InvokeOnMainThread(() => success(entry.Image.RawImage));
-        }
-
-        private void DoCallback(Exception exception, Action<Exception> error)
-        {
-            InvokeOnMainThread(() => error(exception));
-        }
-
-        private void ProcessError(string url, Exception exception)
-        {
-            List<CallbackPair> callbackPairs = null;
-            RunSyncOrAsyncWithLock(
-                () =>
-                {
-                    callbackPairs = _currentlyRequested[url];
-                    _currentlyRequested.Remove(url);
-                },
-                () =>
-                    {
-                        foreach (var callbackPair in callbackPairs)
-                        {
-                            DoCallback(exception, callbackPair.Error);
-                        }
-                    }
-                );
-
-        }
-
-        private void ProcessFilePath(string url, string filePath)
-        {
-            MvxImage<T> image;
-
-            try
-            {
-                image = Parse(filePath);
-            }
-            catch (Exception exception)
-            {
-                ProcessError(url, exception);
-                return;
-            }
-
-            var entry = new Entry(url, image);
-            List<CallbackPair> callbackPairs = null;
-            RunSyncOrAsyncWithLock(
-                () =>
-                    {
-                        _entriesByHttpUrl[url] = entry;
-                        callbackPairs = _currentlyRequested[url];
-                        _currentlyRequested.Remove(url);
-                    },
-                () =>
-                    {
-                        foreach (var callbackPair in callbackPairs)
-                        {
-                            DoCallback(entry, callbackPair.Success);
-                        }
-                        ReduceSizeIfNecessary();
-                    });
-        }
-
         private void ReduceSizeIfNecessary()
         {
             RunSyncOrAsyncWithLock(() =>
+            {
+                var currentSizeInBytes = _entriesByHttpUrl.Values.Sum(x => x.Image.GetSizeInBytes());
+                var currentCountFiles = _entriesByHttpUrl.Values.Count;
+
+                if (currentCountFiles <= _maxInMemoryFiles
+                    && currentSizeInBytes <= _maxInMemoryBytes)
+                    return;
+
+                // we don't use LINQ OrderBy here because of AOT/JIT problems on MonoTouch
+                List<Entry> sortedEntries = _entriesByHttpUrl.Values.ToList();
+                sortedEntries.Sort(new MvxImageComparer());
+
+                while (currentCountFiles > _maxInMemoryFiles
+                        || currentSizeInBytes > _maxInMemoryBytes)
                 {
-                    var currentSizeInBytes = _entriesByHttpUrl.Values.Sum(x => x.Image.GetSizeInBytes());
-                    var currentCountFiles = _entriesByHttpUrl.Values.Count;
+                    var toRemove = sortedEntries[0];
+                    sortedEntries.RemoveAt(0);
 
-                    if (currentCountFiles <= _maxInMemoryFiles
-                        && currentSizeInBytes <= _maxInMemoryBytes)
-                        return;
+                    currentSizeInBytes -= toRemove.Image.GetSizeInBytes();
+                    currentCountFiles--;
 
-                    // we don't use LINQ OrderBy here because of AOT/JIT problems on MonoTouch
-                    List<Entry> sortedEntries = _entriesByHttpUrl.Values.ToList();
-                    sortedEntries.Sort(new MvxImageComparer());
+                    if (_disposeOnRemove) 
+                        toRemove.Image.RawImage.DisposeIfDisposable(); 
 
-                    while (currentCountFiles > _maxInMemoryFiles
-                           || currentSizeInBytes > _maxInMemoryBytes)
-                    {
-                        var toRemove = sortedEntries[0];
-                        sortedEntries.RemoveAt(0);
-
-                        currentSizeInBytes -= toRemove.Image.GetSizeInBytes();
-                        currentCountFiles--;
-
-                        if (_disposeOnRemove) 
-                            toRemove.Image.RawImage.DisposeIfDisposable(); 
-
-                        _entriesByHttpUrl.Remove(toRemove.Url);
-                    }
-                });
+                    _entriesByHttpUrl.Remove(toRemove.Url);
+                }
+            });
         }
 
         private class MvxImageComparer : IComparer<Entry>
@@ -170,27 +114,11 @@ namespace Cirrious.MvvmCross.Plugins.DownloadCache
             }
         }
 
-        protected MvxImage<T> Parse(string path)
+        protected Task<MvxImage<T>> Parse(string path)
         {
             var loader = Mvx.Resolve<IMvxLocalFileImageLoader<T>>();
-            return loader.Load(path, false);
+            return loader.Load(path, false, 0, 0);
         }
-
-        #region Nested type: CallbackPair
-
-        private class CallbackPair
-        {
-            public CallbackPair(Action<T> success, Action<Exception> error)
-            {
-                Error = error;
-                Success = success;
-            }
-
-            public Action<T> Success { get; private set; }
-            public Action<Exception> Error { get; private set; }
-        }
-
-        #endregion
 
         #region Nested type: Entry
 

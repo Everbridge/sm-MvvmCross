@@ -1,3 +1,10 @@
+// MvxFragmentsPresenter.cs
+// (c) Copyright Cirrious Ltd. http://www.cirrious.com
+// MvvmCross is licensed using Microsoft Public License (Ms-PL)
+// Contributions and inspirations noted in readme.md and license.txt
+// 
+// Project Lead - Stuart Lodge, @slodge, me@slodge.com
+
 using System;
 using System.Collections.Generic;
 using Android.OS;
@@ -67,6 +74,17 @@ namespace Cirrious.MvvmCross.Droid.FullFragging.Presenter
             }
             
             base.Show(request);
+        }
+
+        public override void Close (IMvxViewModel viewModel)
+        {
+            IMvxFragmentHost host;
+            if (_dictionary.TryGetValue(viewModel.GetType(), out host))
+            {
+                if (host.Close(viewModel))
+                    return;
+            }
+            base.Close (viewModel);
         }
     }
 }

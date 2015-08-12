@@ -5,41 +5,48 @@
 // 
 // Project Lead - Stuart Lodge, @slodge, me@slodge.com
 
+using System.Threading.Tasks;
 using Cirrious.CrossCore;
+using Cirrious.CrossCore.Core;
 using Cirrious.MvvmCross.Plugins.File;
-using Foundation;
 using UIKit;
 
 namespace Cirrious.MvvmCross.Plugins.DownloadCache.Touch
 {
-    public class MvxTouchLocalFileImageLoader
-        : IMvxLocalFileImageLoader<UIImage>    
-    {
+	public class MvxTouchLocalFileImageLoader
+        : MvxAllThreadDispatchingObject
+        , IMvxLocalFileImageLoader<UIImage>
+	{
 		private const string ResourcePrefix = "res:";
 
-        public MvxImage<UIImage> Load(string localPath, bool shouldCache)
-        {
-			UIImage uiImage;
-            if (localPath.StartsWith(ResourcePrefix))
-			{
-				var resourcePath = localPath.Substring(ResourcePrefix.Length);
-				uiImage = LoadResourceImage(resourcePath, shouldCache);
-			}
-			else
-			{
-				uiImage = LoadUIImage(localPath);
-			}
-            return new MvxTouchImage(uiImage);
-        }
+		public Task<MvxImage<UIImage>> Load(string localPath, bool shouldCache, int width, int height)
+		{
+            var tcs = new TaskCompletionSource<MvxImage<UIImage>>();
 
-        private UIImage LoadUIImage(string localPath)
-        {
-            var file = Mvx.Resolve<IMvxFileStore>();
-            var nativePath = file.NativePath(localPath);
-            return UIImage.FromFile(nativePath);
-        }
+            InvokeOnMainThread(() => {
+                UIImage uiImage;
 
-		private UIImage LoadResourceImage(string resourcePath, bool shouldCache)
+                if (localPath.StartsWith(ResourcePrefix))
+                    uiImage = LoadResourceImage(localPath.Substring(ResourcePrefix.Length));
+                else
+                    uiImage = LoadUiImage(localPath);
+
+                var result = (MvxImage<UIImage>)new MvxTouchImage(uiImage);
+
+                tcs.TrySetResult(result);
+            });
+
+		    return tcs.Task;
+		}
+
+		private static UIImage LoadUiImage(string localPath)
+		{
+			var file = Mvx.Resolve<IMvxFileStore>();
+			var nativePath = file.NativePath(localPath);
+			return UIImage.FromFile(nativePath);
+		}
+
+		private static UIImage LoadResourceImage(string resourcePath)
 		{
 			return UIImage.FromBundle(resourcePath);
 		}

@@ -35,8 +35,8 @@ namespace Cirrious.MvvmCross.Binding.Droid
 
         protected virtual void InitializeLayoutInflation()
         {
-            var inflatorFactory = CreateLayoutInfactorFactoryFactory();
-            Mvx.RegisterSingleton(inflatorFactory);
+            var inflaterfactoryFactory = CreateLayoutInflaterFactoryFactory();
+            Mvx.RegisterSingleton(inflaterfactoryFactory);
 
             var viewFactory = CreateAndroidViewFactory();
             Mvx.RegisterSingleton(viewFactory);
@@ -50,9 +50,9 @@ namespace Cirrious.MvvmCross.Binding.Droid
             return new MvxAndroidViewBinderFactory(); 
         }
 
-        protected virtual IMvxLayoutInfactorFactoryFactory CreateLayoutInfactorFactoryFactory()
+        protected virtual IMvxLayoutInflaterHolderFactoryFactory CreateLayoutInflaterFactoryFactory()
         {
-            return new MvxLayoutInflatorFactoryFactory();
+            return new MvxLayoutInflaterFactoryFactory();
         }
 
         protected virtual IMvxAndroidViewFactory CreateAndroidViewFactory()
@@ -84,6 +84,8 @@ namespace Cirrious.MvvmCross.Binding.Droid
                                                             view => new MvxViewClickBinding(view));
             registry.RegisterCustomBindingFactory<TextView>("Text",
                                                             textView => new MvxTextViewTextTargetBinding(textView));
+            registry.RegisterCustomBindingFactory<TextView>("TextFormatted",
+                                                            textView => new MvxTextViewTextFormattedTargetBinding(textView));
             registry.RegisterPropertyInfoBindingFactory((typeof(MvxAutoCompleteTextViewPartialTextTargetBinding)),
                                                     typeof(AutoCompleteTextView), "PartialText");
             registry.RegisterPropertyInfoBindingFactory(
@@ -128,6 +130,7 @@ namespace Cirrious.MvvmCross.Binding.Droid
                                                             new MvxViewLongClickBinding(view));
             registry.RegisterCustomBindingFactory<MvxRadioGroup>("SelectedItem",
                 radioGroup => new MvxRadioGroupSelectedItemBinding(radioGroup));
+			registry.RegisterCustomBindingFactory("TextFocus", (EditText view) => new MvxTextFocusTargetBinding(view));
         }
 
         protected override void FillDefaultBindingNames(IMvxBindingNameRegistry registry)
