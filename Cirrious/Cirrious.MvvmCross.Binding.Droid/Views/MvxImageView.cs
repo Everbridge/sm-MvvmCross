@@ -23,6 +23,7 @@ namespace Cirrious.MvvmCross.Binding.Droid.Views
         : ImageView
     {
         private IMvxImageHelper<Bitmap> _imageHelper;
+        private Bitmap _currentBitmap;
 
         public string ImageUrl
         {
@@ -126,9 +127,21 @@ namespace Cirrious.MvvmCross.Binding.Droid.Views
 
         private void ImageHelperOnImageChanged(object sender, MvxValueEventArgs<Bitmap> mvxValueEventArgs)
         {
+
             Post(() => { // marshal back on UI Thread
+
+                var previousBitmap = _currentBitmap;
+
+                _currentBitmap = mvxValueEventArgs.Value;
+
                 SetImageBitmap(mvxValueEventArgs.Value);
+                if (previousBitmap != null)
+                {
+                    previousBitmap.Recycle();
+                }
             });
+
+
         }
     }
 }
