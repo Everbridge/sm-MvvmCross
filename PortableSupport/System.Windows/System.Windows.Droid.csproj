@@ -18,7 +18,7 @@
     <OutputPath>..\..\bin\Debug\Mvx\Droid\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <WarningLevel>0</WarningLevel>
     <DelaySign>true</DelaySign>
     <AndroidLinkMode>None</AndroidLinkMode>
     <AssemblyName>System.Windows</AssemblyName>
@@ -31,7 +31,7 @@
     <OutputPath>..\..\bin\Release\Mvx\Droid\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <WarningLevel>0</WarningLevel>
     <DelaySign>true</DelaySign>
     <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
     <AssemblyName>System.Windows</AssemblyName>
