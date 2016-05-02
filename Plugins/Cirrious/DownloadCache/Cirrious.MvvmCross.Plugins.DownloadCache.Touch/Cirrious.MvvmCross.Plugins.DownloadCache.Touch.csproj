@@ -17,7 +17,7 @@
     <OutputPath>..\..\..\..\bin\Debug\Mvx\Touch\</OutputPath>
     <DefineConstants>DEBUG;MONOTOUCH</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <WarningLevel>0</WarningLevel>
     <ConsolePause>False</ConsolePause>
     <MtouchDebug>True</MtouchDebug>
     <MtouchProfiling>True</MtouchProfiling>
@@ -29,7 +29,7 @@
     <Optimize>False</Optimize>
     <OutputPath>..\..\..\..\bin\Release\Mvx\Touch\</OutputPath>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <WarningLevel>0</WarningLevel>
     <ConsolePause>False</ConsolePause>
     <DefineConstants>MONOTOUCH</DefineConstants>
   </PropertyGroup>
